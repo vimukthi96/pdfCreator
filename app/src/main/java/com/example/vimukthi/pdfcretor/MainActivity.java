@@ -1,14 +1,18 @@
 package com.example.vimukthi.pdfcretor;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -30,6 +34,8 @@ import java.io.OutputStream;
 public class MainActivity extends AppCompatActivity {
 
     private Button btnCreatePDF,btnViewPDF;
+    public static final int REQUEST_PERM_WRITE_STORAGE =102;
+    public static final int REQUEST_PERM_READ_STORAGE =103;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,30 +48,46 @@ public class MainActivity extends AppCompatActivity {
         btnCreatePDF.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                createPDF();
+                if(ActivityCompat.checkSelfPermission(getApplicationContext(),
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},REQUEST_PERM_WRITE_STORAGE);
+                }
+                else {
+                    createPDF();
+                }
+                //createPDF();
             }
         });
 
         btnViewPDF.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                viewPDF();
+                if(ActivityCompat.checkSelfPermission(getApplicationContext(),
+                        Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},REQUEST_PERM_READ_STORAGE);
+                }
+                else {
+                    viewPDF();
+                }
+               // viewPDF();
             }
         });
     }
 
     private void viewPDF() {
+
+        String path =Environment.getExternalStorageDirectory().getAbsolutePath() + "/PDF/demo.pdf";
         Intent intent =new Intent(Intent.ACTION_VIEW);
-        String path =Environment.getExternalStorageDirectory().getAbsolutePath() + "/PDF";
-        File file =new File(path,"demo.pdf");
-        intent.setDataAndType(Uri.fromFile(file),"application/pdf");
+        File file =new File(path);
+        String mimeType= MimeTypeMap.getSingleton().getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(path));
+        intent.setDataAndType(Uri.fromFile(file),mimeType);
+        Intent intent1=Intent.createChooser(intent,"Open With...");
         startActivity(intent);
     }
 
     private void createPDF() {
-     //   File file = new File(file.getAbsolutePath()+ File.separator + timeStamp + ".pdf");
-       // myFile.createNewFile();
-        //OutputStream output = new FileOutputStream(myFile);
         Document document =new Document();
 
 
